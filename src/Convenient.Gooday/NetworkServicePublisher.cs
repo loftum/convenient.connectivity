@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Convenient.Gooday.Domain;
 using Convenient.Gooday.Domain.Records;
 using Convenient.Gooday.Domain.Types;
+using Convenient.Gooday.Logging;
 using Convenient.Gooday.Net;
 using Convenient.Gooday.Parsing;
 
@@ -23,21 +24,26 @@ namespace Convenient.Gooday
         public string Domain { get; }
         public ushort Port { get; }
         public string Host { get; }
+        private DateTimeOffset _nextPublishTime = DateTimeOffset.UtcNow;
+        private readonly ILogger _logger;
         
-        public NetworkServicePublisher(string instanceName, string serviceType, ushort port, string domain = "local")
+        public NetworkServicePublisher(string instanceName, string serviceType, ushort port, string domain = "local", ILogger logger = null)
         {
             InstanceName = instanceName.WithoutPostfix();
             ServiceType = serviceType.UnderscorePrefix();
             Domain = domain;
             Port = port;
+            _logger = logger ?? new ConsoleLogger();
             Host = Guid.NewGuid().ToString("N");
             _clients = Zeroconf.CreateMulticastClients().ToList();
         }
 
         public void Start()
         {
+            _logger.Log("Starting");
             IsRunning = true;
             _run = RunAsync();
+            _logger.Log($"Publishing {InstanceName}.{ServiceType}.{Host}.{Domain}. on port {Port}");
         }
 
         public async Task StopAsync()
@@ -53,7 +59,7 @@ namespace Convenient.Gooday
             }
             finally
             {
-                foreach (var client in _clients.Select(c => c.UdpClient))
+                foreach (var client in _clients.Select(c => c.Udp))
                 {
                     client.Close();
                 }
@@ -63,34 +69,53 @@ namespace Convenient.Gooday
 
         private Task RunAsync()
         {
-            return Task.WhenAll(_clients.Select(ReceiveFromAsync));
+            return Task.WhenAll(_clients.Select(PublishAsync).Concat(_clients.Select(ReceiveFromAsync)));
         }
-        
-        private async Task ReceiveFromAsync(MulticastClient client)
+
+        private async Task PublishAsync(MulticastClient client)
         {
-            var hello = CreateResponse(0, 120, client.Adapter.Ipv4Address);
-            var bytes = MessageParser.Encode(hello);
-            await client.UdpClient.SendAsync(bytes, bytes.Length, Zeroconf.BroadcastEndpoint);
+            
             while (IsRunning)
             {
                 try
                 {
-                    var result = await client.UdpClient.ReceiveAsync();
+                    if (DateTimeOffset.UtcNow > _nextPublishTime)
+                    {
+                        var hello = CreateMessage(0, 120, client.Adapter.Ipv4Address);
+                        var bytes = MessageParser.Encode(hello);
+                        await client.Udp.SendAsync(bytes, bytes.Length, Zeroconf.BroadcastEndpoint);
+                        _nextPublishTime = DateTimeOffset.UtcNow + TimeSpan.FromSeconds(110);
+                    }
+                    await Task.Delay(TimeSpan.FromSeconds(9));
+                }
+                catch (Exception)
+                {
+                    
+                }
+            }
+        }
+        
+        private async Task ReceiveFromAsync(MulticastClient client)
+        {
+            
+            while (IsRunning)
+            {
+                try
+                {
+                    var result = await client.Udp.ReceiveAsync();
                     var message = MessageParser.Decode(result.Buffer);
 
-                    if (message.Type == MessageType.Query)
+                    if (message.Type == MessageType.Query &&
+                        message.Questions.Any(q => q.QType == QType.PTR && q.QName == $"{ServiceType}.{Domain}."))
                     {
-                        if (message.Questions.Any(q => q.QType == QType.PTR && q.QName == $"{ServiceType}.{Domain}."))
-                        {
-                            var response = CreateResponse(message.Id, 120, client.Adapter.Ipv4Address);
-                            var packet = MessageParser.Encode(response);
-                            await client.UdpClient.SendAsync(packet, packet.Length, result.RemoteEndPoint);
-                        }
+                        var response = CreateMessage(message.Id, 120, client.Adapter.Ipv4Address);
+                        var packet = MessageParser.Encode(response);
+                        await client.Udp.SendAsync(packet, packet.Length, result.RemoteEndPoint);
                     }
                 }
                 catch (ObjectDisposedException e)
                 {
-                    if (e.InnerException is TaskCanceledException a)
+                    if (e.InnerException is TaskCanceledException)
                     {
                             
                     }
@@ -104,12 +129,12 @@ namespace Convenient.Gooday
 
         private Task SendGoodbyeMessage(MulticastClient client)
         {
-            var goodbye = CreateResponse(0, 0, client.Adapter.Ipv4Address);
+            var goodbye = CreateMessage(0, 0, client.Adapter.Ipv4Address);
             var data = MessageParser.Encode(goodbye);
-            return client.UdpClient.SendAsync(data, data.Length, Zeroconf.BroadcastEndpoint);
+            return client.Udp.SendAsync(data, data.Length, Zeroconf.BroadcastEndpoint);
         }
 
-        private DomainMessage CreateResponse(ushort id, uint ttl, IPAddress ipAddress)
+        private DomainMessage CreateMessage(ushort id, uint ttl, IPAddress ipAddress)
         {
             return new DomainMessage
             {
@@ -126,7 +151,8 @@ namespace Convenient.Gooday
                         Ttl = ttl,
                         Record = new PointerRecord
                         {
-                            PTRDName = $"{Host}.{Domain}."
+                            //PTRDName = $"{Host}.{Domain}."
+                            PTRDName = $"{ServiceType}.{Domain}."
                         }
                     },
                     new ResourceRecord

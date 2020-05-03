@@ -32,7 +32,7 @@ namespace Convenient.Gooday
             IsRunning = false;
             foreach (var client in _clients)
             {
-                client.UdpClient.Close();
+                client.Udp.Close();
             }
         }
 
@@ -53,14 +53,14 @@ namespace Convenient.Gooday
                 var request = CreateRequest(ii);
                 Console.WriteLine(request);
                 var bytes = new MessageWriter().Write(request);
-                await Task.WhenAll(_clients.Select(c => c.UdpClient).Select(c => c.SendAsync(bytes, bytes.Length, Zeroconf.BroadcastEndpoint)));
+                await Task.WhenAll(_clients.Select(c => c.Udp).Select(c => c.SendAsync(bytes, bytes.Length, Zeroconf.BroadcastEndpoint)));
                 await Task.Delay(10000);
             } while (IsRunning);
         }
 
         private Task ReceiveAsync()
         {
-            return Task.WhenAll(_clients.Select(c => c.UdpClient).Select(ReceiveFromAsync));
+            return Task.WhenAll(_clients.Select(c => c.Udp).Select(ReceiveFromAsync));
         }
 
         private async Task ReceiveFromAsync(UdpClient client)
@@ -104,8 +104,8 @@ namespace Convenient.Gooday
             IsRunning = false;
             foreach (var client in _clients)
             {
-                client.UdpClient.Close();
-                client.UdpClient.Dispose();
+                client.Udp.Close();
+                client.Udp.Dispose();
             }
         }
     }

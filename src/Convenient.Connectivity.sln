@@ -2,6 +2,12 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Convenient.Gooday", "Convenient.Gooday\Convenient.Gooday.csproj", "{4E2C35AB-19FB-4C5B-A916-D9D443C864C3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "10. Libs", "10. Libs", "{A869F172-C2EE-4BB1-9DAF-C4DB3305D901}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "50. Examples", "50. Examples", "{DC4513C7-DFD6-46E6-B474-294C5D9CCBF7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoServer", "EchoServer\EchoServer.csproj", "{F3FAC339-9FFD-402F-8CB0-731AF6B1F98A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +18,13 @@ Global
 		{4E2C35AB-19FB-4C5B-A916-D9D443C864C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E2C35AB-19FB-4C5B-A916-D9D443C864C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E2C35AB-19FB-4C5B-A916-D9D443C864C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3FAC339-9FFD-402F-8CB0-731AF6B1F98A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3FAC339-9FFD-402F-8CB0-731AF6B1F98A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3FAC339-9FFD-402F-8CB0-731AF6B1F98A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3FAC339-9FFD-402F-8CB0-731AF6B1F98A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4E2C35AB-19FB-4C5B-A916-D9D443C864C3} = {A869F172-C2EE-4BB1-9DAF-C4DB3305D901}
+		{F3FAC339-9FFD-402F-8CB0-731AF6B1F98A} = {DC4513C7-DFD6-46E6-B474-294C5D9CCBF7}
 	EndGlobalSection
 EndGlobal
