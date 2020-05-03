@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Convenient.Gooday.Domain.Extensions;
 using Convenient.Gooday.Domain.Types;
 
 namespace Convenient.Gooday.Domain

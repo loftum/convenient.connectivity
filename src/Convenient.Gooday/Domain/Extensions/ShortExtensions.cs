@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace Convenient.Gooday.Domain
+namespace Convenient.Gooday.Domain.Extensions
 {
     internal static class ShortExtensions
     {

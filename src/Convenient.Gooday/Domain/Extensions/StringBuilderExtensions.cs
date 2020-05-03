@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Convenient.Gooday.Domain
+namespace Convenient.Gooday.Domain.Extensions
 {
     internal static class StringBuilderExtensions
     {

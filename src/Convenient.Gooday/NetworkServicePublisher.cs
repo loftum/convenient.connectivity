@@ -11,26 +11,27 @@ using Convenient.Gooday.Parsing;
 
 namespace Convenient.Gooday
 {
-    public class ZeroconfHost: IDisposable
+    public class NetworkServicePublisher: IDisposable
     {
         public bool IsRunning { get; private set; }
+        
         private readonly List<MulticastClient> _clients;
         private Task _run;
 
-        private readonly string _instanceName;
-        private readonly string _serviceType;
-        private readonly string _domain;
-        private readonly ushort _port;
-        private readonly string _host;
+        public string InstanceName { get; }
+        public string ServiceType { get; }
+        public string Domain { get; }
+        public ushort Port { get; }
+        public string Host { get; }
         
-        public ZeroconfHost(string instanceName, string serviceType, ushort port, string host, string domain = "local")
+        public NetworkServicePublisher(string instanceName, string serviceType, ushort port, string domain = "local")
         {
-            _instanceName = instanceName.WithoutPostfix();
-            _serviceType = serviceType.UnderscorePrefix();
-            _domain = domain;
-            _port = port;
+            InstanceName = instanceName.WithoutPostfix();
+            ServiceType = serviceType.UnderscorePrefix();
+            Domain = domain;
+            Port = port;
+            Host = Guid.NewGuid().ToString("N");
             _clients = Zeroconf.CreateMulticastClients().ToList();
-            _host = host;
         }
 
         public void Start()
@@ -46,7 +47,7 @@ namespace Convenient.Gooday
                 IsRunning = false;
                 await Task.WhenAll(_clients.Select(SendGoodbyeMessage));
             }
-            catch (Exception e)
+            catch (Exception)
             {
 
             }
@@ -79,7 +80,7 @@ namespace Convenient.Gooday
 
                     if (message.Type == MessageType.Query)
                     {
-                        if (message.Questions.Any(q => q.QType == QType.PTR && q.QName == $"{_serviceType}.{_domain}."))
+                        if (message.Questions.Any(q => q.QType == QType.PTR && q.QName == $"{ServiceType}.{Domain}."))
                         {
                             var response = CreateResponse(message.Id, 120, client.Adapter.Ipv4Address);
                             var packet = MessageParser.Encode(response);
@@ -94,7 +95,7 @@ namespace Convenient.Gooday
                             
                     }
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     
                 }
@@ -125,12 +126,12 @@ namespace Convenient.Gooday
                         Ttl = ttl,
                         Record = new PointerRecord
                         {
-                            PTRDName = $"{_host}.{_domain}."
+                            PTRDName = $"{Host}.{Domain}."
                         }
                     },
                     new ResourceRecord
                     {
-                        Name = $"{_instanceName}.{_serviceType}.{_domain}.",
+                        Name = $"{InstanceName}.{ServiceType}.{Domain}.",
                         Type = RRType.TXT, 
                         Class = Class.IN,
                         Ttl = ttl,
@@ -138,24 +139,24 @@ namespace Convenient.Gooday
                         {
                             Text = new List<string>
                             {
-                                $"_d={_instanceName}"
+                                $"_d={InstanceName}"
                             }
                         }
                     },
                     new ResourceRecord
                     {
-                        Name = $"{_serviceType}.{_domain}.",
+                        Name = $"{ServiceType}.{Domain}.",
                         Type = RRType.PTR, 
                         Class = Class.IN,
                         Ttl = ttl,
                         Record = new PointerRecord
                         {
-                            PTRDName = $"{_instanceName}.{_serviceType}.{_domain}."
+                            PTRDName = $"{InstanceName}.{ServiceType}.{Domain}."
                         }
                     },
                     new ResourceRecord
                     {
-                        Name = $"{_instanceName}.{_serviceType}.{_domain}.",
+                        Name = $"{InstanceName}.{ServiceType}.{Domain}.",
                         Type = RRType.SRV, 
                         Class = Class.IN,
                         Ttl = ttl,
@@ -163,13 +164,13 @@ namespace Convenient.Gooday
                         {
                             Priority = 0,
                             Weight = 0,
-                            Port = _port,
-                            Target = $"{_host}.{_domain}."
+                            Port = Port,
+                            Target = $"{Host}.{Domain}."
                         }
                     },
                     new ResourceRecord
                     {
-                        Name = $"{_host}.{_domain}.",
+                        Name = $"{Host}.{Domain}.",
                         Type = RRType.A,
                         Class = Class.IN,
                         Ttl = ttl,

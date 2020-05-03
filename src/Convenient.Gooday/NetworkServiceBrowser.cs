@@ -10,7 +10,7 @@ using Convenient.Gooday.Parsing;
 
 namespace Convenient.Gooday
 {
-    public class ZeroconfClient: IDisposable
+    public class NetworkServiceBrowser: IDisposable
     {
         public bool IsRunning { get; private set; }
         private readonly List<MulticastClient> _clients;
@@ -20,7 +20,7 @@ namespace Convenient.Gooday
         private readonly string _serviceType;
         private readonly string _domain;
         
-        public ZeroconfClient(string serviceType, string domain = "local")
+        public NetworkServiceBrowser(string serviceType, string domain = "local")
         {
             _serviceType = serviceType.UnderscorePrefix();
             _domain = domain;

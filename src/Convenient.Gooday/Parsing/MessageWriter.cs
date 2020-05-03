@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Convenient.Gooday.Domain;
+using Convenient.Gooday.Domain.Extensions;
 using Convenient.Gooday.Domain.Records;
 
 namespace Convenient.Gooday.Parsing
