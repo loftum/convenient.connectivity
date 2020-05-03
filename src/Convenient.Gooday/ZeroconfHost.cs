@@ -21,14 +21,14 @@ namespace Convenient.Gooday
         private readonly ushort _port;
         private readonly string _host;
         
-        public ZeroconfHost(string instanceName, string serviceType, ushort port, string domain = "local")
+        public ZeroconfHost(string instanceName, string serviceType, ushort port, string host, string domain = "local")
         {
             _instanceName = instanceName.WithoutPostfix();
             _serviceType = serviceType.UnderscorePrefix();
             _domain = domain;
             _port = port;
-            _clients = Zeroconf.CreateUdpClients().ToList();
-            _host = Guid.NewGuid().ToString();
+            _clients = Zeroconf.CreateMulticastClients().ToList();
+            _host = host;
         }
 
         public void Start()
@@ -50,7 +50,7 @@ namespace Convenient.Gooday
             }
             finally
             {
-                foreach (var client in _clients.Select(c => c.Client))
+                foreach (var client in _clients.Select(c => c.UdpClient))
                 {
                     client.Close();
                 }
@@ -67,12 +67,12 @@ namespace Convenient.Gooday
         {
             var hello = CreateResponse(0, 120, client.Adapter.Ipv4Address);
             var bytes = MessageParser.Encode(hello);
-            await client.Client.SendAsync(bytes, bytes.Length, Zeroconf.BroadcastEndpoint);
+            await client.UdpClient.SendAsync(bytes, bytes.Length, Zeroconf.BroadcastEndpoint);
             while (IsRunning)
             {
                 try
                 {
-                    var result = await client.Client.ReceiveAsync();
+                    var result = await client.UdpClient.ReceiveAsync();
                     var message = MessageParser.Decode(result.Buffer);
 
                     if (message.Type == MessageType.Query)
@@ -81,7 +81,7 @@ namespace Convenient.Gooday
                         {
                             var response = CreateResponse(message.Id, 120, client.Adapter.Ipv4Address);
                             var packet = MessageParser.Encode(response);
-                            await client.Client.SendAsync(packet, packet.Length, result.RemoteEndPoint);
+                            await client.UdpClient.SendAsync(packet, packet.Length, result.RemoteEndPoint);
                         }
                     }
                 }
@@ -103,7 +103,7 @@ namespace Convenient.Gooday
         {
             var goodbye = CreateResponse(0, 0, client.Adapter.Ipv4Address);
             var data = MessageParser.Encode(goodbye);
-            return client.Client.SendAsync(data, data.Length, Zeroconf.BroadcastEndpoint);
+            return client.UdpClient.SendAsync(data, data.Length, Zeroconf.BroadcastEndpoint);
         }
 
         private ZeroconfMessage CreateResponse(ushort id, uint ttl, IPAddress ipAddress)

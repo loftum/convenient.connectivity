@@ -22,7 +22,7 @@ namespace Convenient.Gooday
         {
             _serviceType = serviceType.UnderscorePrefix();
             _domain = domain;
-            _clients = Zeroconf.CreateUdpClients().ToList();
+            _clients = Zeroconf.CreateMulticastClients().ToList();
         }
         
         public void Stop()
@@ -30,7 +30,7 @@ namespace Convenient.Gooday
             IsRunning = false;
             foreach (var client in _clients)
             {
-                client.Client.Close();
+                client.UdpClient.Close();
             }
         }
 
@@ -51,14 +51,14 @@ namespace Convenient.Gooday
                 var request = CreateRequest(ii);
                 Console.WriteLine(request);
                 var bytes = new MessageWriter().Write(request);
-                await Task.WhenAll(_clients.Select(c => c.Client).Select(c => c.SendAsync(bytes, bytes.Length, Zeroconf.BroadcastEndpoint)));
+                await Task.WhenAll(_clients.Select(c => c.UdpClient).Select(c => c.SendAsync(bytes, bytes.Length, Zeroconf.BroadcastEndpoint)));
                 await Task.Delay(10000);
             } while (IsRunning);
         }
 
         private Task ReceiveAsync()
         {
-            return Task.WhenAll(_clients.Select(c => c.Client).Select(ReceiveFromAsync));
+            return Task.WhenAll(_clients.Select(c => c.UdpClient).Select(ReceiveFromAsync));
         }
 
         private async Task ReceiveFromAsync(UdpClient client)
@@ -102,8 +102,8 @@ namespace Convenient.Gooday
             IsRunning = false;
             foreach (var client in _clients)
             {
-                client.Client.Close();
-                client.Client.Dispose();
+                client.UdpClient.Close();
+                client.UdpClient.Dispose();
             }
         }
     }

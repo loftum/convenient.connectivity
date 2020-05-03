@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
 namespace Convenient.Gooday
 {
-    public static class Network
+    internal static class Network
     {
         public static IEnumerable<InterfaceInfo> GetUsableInterfaces()
         {
@@ -21,20 +20,6 @@ namespace Convenient.Gooday
                       ipV4Properties != null &&
                       ipv4Address != null
                 select new InterfaceInfo(ipV4Properties.Index, ipv4Address, i);
-        }
-    }
-
-    public class InterfaceInfo
-    {
-        public int Index { get; }
-        public IPAddress Ipv4Address { get; }
-        public NetworkInterface Interface { get; }
-
-        public InterfaceInfo(int index, IPAddress ipv4Address, NetworkInterface @interface)
-        {
-            Index = index;
-            Ipv4Address = ipv4Address;
-            Interface = @interface;
         }
     }
 }

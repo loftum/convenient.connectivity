@@ -5,49 +5,19 @@ using System.Net.Sockets;
 
 namespace Convenient.Gooday
 {
-    public class MulticastClient
+    internal static class Zeroconf
     {
-        public UdpClient Client { get; }
-        public InterfaceInfo Adapter { get; }
-        
-        public MulticastClient(UdpClient client, InterfaceInfo adapter)
-        {
-            Client = client;
-            Adapter = adapter;
-        }
-    }
-    
-    public static class Zeroconf
-    {
-        public const int BroadcastPort = 5353;
-        public static IPAddress BroadcastAddress { get; } = IPAddress.Parse("224.0.0.251");
-        public static IPEndPoint BroadcastEndpoint { get; } = new IPEndPoint(BroadcastAddress, BroadcastPort);
+        internal const int BroadcastPort = 5353;
+        internal static IPAddress BroadcastAddress { get; } = IPAddress.Parse("224.0.0.251");
+        internal static IPEndPoint BroadcastEndpoint { get; } = new IPEndPoint(BroadcastAddress, BroadcastPort);
 
-        public static UdpClient CreateUdpClient()
-        {
-            var client = new UdpClient
-            {
-                EnableBroadcast = true,
-                ExclusiveAddressUse = false,
-                MulticastLoopback = false
-            };
-
-            var socket = client.Client;
-            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            
-            socket.Bind(new IPEndPoint(IPAddress.Any, BroadcastPort));
-            
-            client.JoinMulticastGroup(Zeroconf.BroadcastAddress);
-            return client;
-        }
-
-        public static IEnumerable<MulticastClient> CreateUdpClients()
+        internal static IEnumerable<MulticastClient> CreateMulticastClients()
         {
             var adapters = Network.GetUsableInterfaces();
-            return adapters.Select(CreateUdpClient);
+            return adapters.Select(CreateMulticastClient);
         }
 
-        public static MulticastClient CreateUdpClient(InterfaceInfo adapter)
+        internal static MulticastClient CreateMulticastClient(InterfaceInfo adapter)
         {
             var client = new UdpClient
             {
