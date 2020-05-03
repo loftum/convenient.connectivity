@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Convenient.Gooday.Domain;
 using Convenient.Gooday.Domain.Records;
 using Convenient.Gooday.Domain.Types;
 
-namespace Convenient.Gooday.Domain
+namespace Convenient.Gooday.Parsing
 {
     public class MessageReader
     {
@@ -21,15 +22,15 @@ namespace Convenient.Gooday.Domain
             _index = index;
         }
 
-        public ZeroconfMessage Read()
+        public DomainMessage Read()
         {
             var header = ReadHeader();
             return ReadMessage(header);
         }
 
-        private ZeroconfMessage ReadMessage(Header header)
+        private DomainMessage ReadMessage(Header header)
         {
-            var request = new ZeroconfMessage
+            var request = new DomainMessage
             {
                 Id = header.Id,
                 Type = header.QR ? MessageType.Response : MessageType.Query,

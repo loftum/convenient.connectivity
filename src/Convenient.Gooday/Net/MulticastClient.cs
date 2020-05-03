@@ -1,6 +1,6 @@
 using System.Net.Sockets;
 
-namespace Convenient.Gooday
+namespace Convenient.Gooday.Net
 {
     internal class MulticastClient
     {

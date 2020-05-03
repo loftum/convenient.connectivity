@@ -3,7 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 
-namespace Convenient.Gooday
+namespace Convenient.Gooday.Net
 {
     internal static class Zeroconf
     {

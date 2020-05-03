@@ -2,15 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Convenient.Gooday.Domain;
 using Convenient.Gooday.Domain.Records;
 
-namespace Convenient.Gooday.Domain
+namespace Convenient.Gooday.Parsing
 {
     public class MessageWriter
     {
         private readonly List<byte> _bytes = new List<byte>();
         
-        public byte[] Write(ZeroconfMessage message)
+        public byte[] Write(DomainMessage message)
         {
             WriteHeader(message);
             foreach (var question in message.Questions)
@@ -26,7 +27,7 @@ namespace Convenient.Gooday.Domain
             return _bytes.ToArray();
         }
 
-        private void WriteHeader(ZeroconfMessage message)
+        private void WriteHeader(DomainMessage message)
         {
             var header = CreateHeader(message);
             _bytes.AddRange(header.Id.ToBytes());
@@ -37,7 +38,7 @@ namespace Convenient.Gooday.Domain
             _bytes.AddRange(header.ARCount.ToBytes());
         }
         
-        private static Header CreateHeader(ZeroconfMessage message)
+        private static Header CreateHeader(DomainMessage message)
         {
             return new Header
             {
@@ -59,7 +60,7 @@ namespace Convenient.Gooday.Domain
 
         private void Write(ResourceRecord resourceRecord)
         {
-            _bytes.AddRange(DomainNameToBytes(resourceRecord.Name));
+            _bytes.AddRange(DomainName.ToBytes(resourceRecord.Name));
             _bytes.AddRange(((ushort)resourceRecord.Type).ToBytes());
             _bytes.AddRange(((ushort)resourceRecord.Class).ToBytes());
             _bytes.AddRange(resourceRecord.Ttl.ToBytes());
@@ -74,9 +75,9 @@ namespace Convenient.Gooday.Domain
                     throw new ArgumentNullException(nameof(record));
                 case PointerRecord p:
                 {
-                    var bytes = DomainNameToBytes(p.PTRDName);
+                    var bytes = DomainName.ToBytes(p.PTRDName);
                     _bytes.AddRange(((ushort)bytes.Length).ToBytes());
-                    _bytes.AddRange(DomainNameToBytes(p.PTRDName));
+                    _bytes.AddRange(DomainName.ToBytes(p.PTRDName));
                     break;
                 }
                 case ServiceRecord s:
@@ -85,7 +86,7 @@ namespace Convenient.Gooday.Domain
                     bytes.AddRange(s.Priority.ToBytes());
                     bytes.AddRange(s.Weight.ToBytes());
                     bytes.AddRange(s.Port.ToBytes());
-                    bytes.AddRange(DomainNameToBytes(s.Target));
+                    bytes.AddRange(DomainName.ToBytes(s.Target));
                     
                     _bytes.AddRange(((ushort)bytes.Count).ToBytes());
                     _bytes.AddRange(bytes);
@@ -124,40 +125,9 @@ namespace Convenient.Gooday.Domain
 
         private void Write(Question question)
         {
-            _bytes.AddRange(DomainNameToBytes(question.QName));
+            _bytes.AddRange(DomainName.ToBytes(question.QName));
             _bytes.AddRange(((ushort) question.QType).ToBytes());
             _bytes.AddRange(((ushort) question.QClass).ToBytes());
-        }
-        
-        
-        
-        static byte[] DomainNameToBytes(string src)
-        {
-            if (!src.EndsWith(".", StringComparison.Ordinal))
-            {
-                src = $"{src}.";
-            }
-
-            if (src == ".")
-            {
-                return new byte[1];
-            }
-                
-
-            var sb = new StringBuilder();
-            int ii, jj, intLen = src.Length;
-            sb.Append('\0');
-            for (ii = 0, jj = 0; ii < intLen; ii++, jj++)
-            {
-                sb.Append(src[ii]);
-                if (src[ii] == '.')
-                {
-                    sb[ii - jj] = (char)(jj & 0xff);
-                    jj = -1;
-                }
-            }
-            sb[sb.Length -1] = '\0';
-            return Encoding.UTF8.GetBytes(sb.ToString());
         }
     }
 }

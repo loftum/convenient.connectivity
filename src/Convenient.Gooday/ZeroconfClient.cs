@@ -5,6 +5,8 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Convenient.Gooday.Domain;
 using Convenient.Gooday.Domain.Types;
+using Convenient.Gooday.Net;
+using Convenient.Gooday.Parsing;
 
 namespace Convenient.Gooday
 {
@@ -79,9 +81,9 @@ namespace Convenient.Gooday
             }
         }
 
-        private ZeroconfMessage CreateRequest(ushort id)
+        private DomainMessage CreateRequest(ushort id)
         {
-            return new ZeroconfMessage
+            return new DomainMessage
             {
                 Id = id,
                 Type = MessageType.Query,

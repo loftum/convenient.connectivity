@@ -1,5 +1,5 @@
 
-namespace Convenient.Gooday.Domain
+namespace Convenient.Gooday.Domain.Records
 {
     public interface IRecord
     {

@@ -1,8 +1,8 @@
 namespace Convenient.Gooday.Domain
 {
-    public static class StringExtensions
+    internal static class StringExtensions
     {
-        public static string LimitTo(this string value, int limit)
+        internal static string LimitTo(this string value, int limit)
         {
             if (string.IsNullOrEmpty(value) || value.Length <= limit)
             {

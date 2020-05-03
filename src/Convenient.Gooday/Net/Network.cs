@@ -3,11 +3,11 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 
-namespace Convenient.Gooday
+namespace Convenient.Gooday.Net
 {
     internal static class Network
     {
-        public static IEnumerable<InterfaceInfo> GetUsableInterfaces()
+        internal static IEnumerable<InterfaceInfo> GetUsableInterfaces()
         {
             return from i in NetworkInterface.GetAllNetworkInterfaces()
                 let ipProperties = i.GetIPProperties()

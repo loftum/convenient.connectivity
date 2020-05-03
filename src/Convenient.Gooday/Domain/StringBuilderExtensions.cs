@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Convenient.Gooday.Domain
 {
-    public static class StringBuilderExtensions
+    internal static class StringBuilderExtensions
     {
-        public static StringBuilder AppendIfAny<T>(this StringBuilder builder, string name, IList<T> items)
+        internal static StringBuilder AppendIfAny<T>(this StringBuilder builder, string name, IList<T> items)
         {
             if (items.Any())
             {

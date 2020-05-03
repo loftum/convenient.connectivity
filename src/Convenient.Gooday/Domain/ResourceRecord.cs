@@ -1,3 +1,4 @@
+using Convenient.Gooday.Domain.Records;
 using Convenient.Gooday.Domain.Types;
 
 namespace Convenient.Gooday.Domain

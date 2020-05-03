@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Convenient.Gooday.Domain;
 using Convenient.Gooday.Domain.Records;
 using Convenient.Gooday.Domain.Types;
+using Convenient.Gooday.Net;
+using Convenient.Gooday.Parsing;
 
 namespace Convenient.Gooday
 {
@@ -106,9 +108,9 @@ namespace Convenient.Gooday
             return client.UdpClient.SendAsync(data, data.Length, Zeroconf.BroadcastEndpoint);
         }
 
-        private ZeroconfMessage CreateResponse(ushort id, uint ttl, IPAddress ipAddress)
+        private DomainMessage CreateResponse(ushort id, uint ttl, IPAddress ipAddress)
         {
-            return new ZeroconfMessage
+            return new DomainMessage
             {
                 Id = id,
                 Type = MessageType.Response,

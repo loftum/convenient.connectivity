@@ -4,13 +4,7 @@ using Convenient.Gooday.Domain.Types;
 
 namespace Convenient.Gooday.Domain
 {
-    public enum MessageType
-    {
-        Query = 0,
-        Response = 1
-    }
-    
-    public class ZeroconfMessage
+    public class DomainMessage
     {
         public ushort Id { get; set; }
         /// <summary>
