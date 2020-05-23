@@ -1,7 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
+        <Authors>Convenient</Authors>
+        <Owners>Convenient</Owners>
+        <Description>Carefully selected zeroconf features</Description>
+        <ProjectUrl>https://github.com/loftum/convenient.connectivity</ProjectUrl>
         <TargetFrameworks>netstandard2.0;netcoreapp3.1</TargetFrameworks>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
 </Project>
