@@ -50,11 +50,12 @@ namespace EchoServer
             }
         }
 
-        public async Task StopAsync()
+        public Task StopAsync()
         {
             IsRunning = false;
             _stream.Close();
             _socket.Disconnect(false);
+            return Task.CompletedTask;
         }
 
         public void Dispose()
