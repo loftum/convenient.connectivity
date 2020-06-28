@@ -17,7 +17,7 @@ namespace Convenient.Gooday.Net
             return adapters.Select(CreateMulticastClient);
         }
 
-        internal static MulticastClient CreateMulticastClient(InterfaceInfo adapter)
+        internal static MulticastClient CreateMulticastClient(NetworkInterfaceInfo adapter)
         {
             var client = new UdpClient
             {

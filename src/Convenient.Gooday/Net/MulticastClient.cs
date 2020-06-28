@@ -5,9 +5,9 @@ namespace Convenient.Gooday.Net
     internal class MulticastClient
     {
         internal UdpClient Udp { get; }
-        internal InterfaceInfo Adapter { get; }
+        internal NetworkInterfaceInfo Adapter { get; }
         
-        internal MulticastClient(UdpClient udp, InterfaceInfo adapter)
+        internal MulticastClient(UdpClient udp, NetworkInterfaceInfo adapter)
         {
             Udp = udp;
             Adapter = adapter;

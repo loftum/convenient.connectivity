@@ -5,9 +5,9 @@ using System.Net.Sockets;
 
 namespace Convenient.Gooday.Net
 {
-    internal static class Network
+    public static class Network
     {
-        internal static IEnumerable<InterfaceInfo> GetUsableInterfaces()
+        public static IEnumerable<NetworkInterfaceInfo> GetUsableInterfaces()
         {
             return from i in NetworkInterface.GetAllNetworkInterfaces()
                 let ipProperties = i.GetIPProperties()
@@ -19,7 +19,7 @@ namespace Convenient.Gooday.Net
                       i.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
                       ipV4Properties != null &&
                       ipv4Address != null
-                select new InterfaceInfo(ipV4Properties.Index, ipv4Address, i);
+                select new NetworkInterfaceInfo(ipV4Properties.Index, ipv4Address, i);
         }
     }
 }
