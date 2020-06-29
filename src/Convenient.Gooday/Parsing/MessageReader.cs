@@ -30,7 +30,7 @@ namespace Convenient.Gooday.Parsing
 
         private DomainMessage ReadMessage(Header header)
         {
-            var request = new DomainMessage
+            var message = new DomainMessage
             {
                 Id = header.Id,
                 Type = header.QR ? MessageType.Response : MessageType.Query,
@@ -44,25 +44,25 @@ namespace Convenient.Gooday.Parsing
             
             for (var ii = 0; ii < header.QDCount; ii++)
             {
-                request.Questions.Add(ReadQuestion());
+                message.Questions.Add(ReadQuestion());
             }
 
             for (var ii = 0; ii < header.ANCount; ii++)
             {
-                request.Answers.Add(ReadResourceRecord());
+                message.Answers.Add(ReadResourceRecord());
             }
             
             for (var ii = 0; ii < header.NSCount; ii++)
             {
-                request.Authorities.Add(ReadResourceRecord());
+                message.Authorities.Add(ReadResourceRecord());
             }
             
             for (var ii = 0; ii < header.ARCount; ii++)
             {
-                request.Additionals.Add(ReadResourceRecord());
+                message.Additionals.Add(ReadResourceRecord());
             }
 
-            return request;
+            return message;
         }
 
         private ResourceRecord ReadResourceRecord()
@@ -94,12 +94,12 @@ namespace Convenient.Gooday.Parsing
                         Address = $"{ReadUint16():x}:{ReadUint16():x}:{ReadUint16():x}:{ReadUint16():x}:{ReadUint16():x}:{ReadUint16():x}:{ReadUint16():x}:{ReadUint16():x}"
                     };
                 case RRType.TXT:
-                    return new TextRecord
+                    return new TXTRecord
                     {
                         Text = ReadText(rdLength)
                     };
                 case RRType.SRV:
-                    return new ServiceRecord
+                    return new SRVRecord
                     {
                         Priority = ReadUint16(),
                         Weight = ReadUint16(),
@@ -107,7 +107,7 @@ namespace Convenient.Gooday.Parsing
                         Target = ReadDomainName()
                     };
                 case RRType.PTR:
-                    return new PointerRecord
+                    return new PTRRecord
                     {
                         PTRDName = ReadDomainName()
                     };

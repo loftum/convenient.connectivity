@@ -14,6 +14,7 @@ namespace Convenient.Gooday
 {
     public class NetworkServicePublisher: IDisposable
     {
+        private readonly ILogger _logger;
         public bool IsRunning { get; private set; }
         
         private readonly List<MulticastClient> _clients;
@@ -25,7 +26,6 @@ namespace Convenient.Gooday
         public ushort Port { get; }
         public string Host { get; }
         private DateTimeOffset _nextPublishTime = DateTimeOffset.UtcNow;
-        private readonly ILogger _logger;
         
         public NetworkServicePublisher(string instanceName, string serviceType, ushort port, string domain = "local", ILogger logger = null)
         {
@@ -33,23 +33,23 @@ namespace Convenient.Gooday
             ServiceType = serviceType.UnderscorePrefix();
             Domain = domain;
             Port = port;
-            _logger = logger ?? new ConsoleLogger();
             Host = Guid.NewGuid().ToString("N");
             _clients = Zeroconf.CreateMulticastClients().ToList();
+            _logger = logger ?? new NullLogger();
         }
 
         public void Start()
         {
-            _logger.Log("Starting");
             IsRunning = true;
             _run = RunAsync();
-            _logger.Log($"Publishing {InstanceName}.{ServiceType}.{Host}.{Domain}. on port {Port}");
+            _logger.Info($"Start publishing {InstanceName}.{ServiceType}.{Host}.{Domain}. on port {Port}");
         }
 
         public async Task StopAsync()
         {
             try
             {
+                _logger.Info($"Stop publishing {InstanceName}.{ServiceType}.{Host}.{Domain}. on port {Port}");
                 IsRunning = false;
                 await Task.WhenAll(_clients.Select(SendGoodbyeMessage));
             }
@@ -74,7 +74,6 @@ namespace Convenient.Gooday
 
         private async Task PublishAsync(MulticastClient client)
         {
-            
             while (IsRunning)
             {
                 try
@@ -83,6 +82,7 @@ namespace Convenient.Gooday
                     {
                         var hello = CreateMessage(0, 120, client.Adapter.Ipv4Address);
                         var bytes = MessageParser.Encode(hello);
+                        _logger.Trace($"Publishing hello\n{hello}");
                         await client.Udp.SendAsync(bytes, bytes.Length, Zeroconf.BroadcastEndpoint);
                         _nextPublishTime = DateTimeOffset.UtcNow + TimeSpan.FromSeconds(110);
                     }
@@ -131,6 +131,7 @@ namespace Convenient.Gooday
         {
             var goodbye = CreateMessage(0, 0, client.Adapter.Ipv4Address);
             var data = MessageParser.Encode(goodbye);
+            _logger.Trace($"Publishing goodbye\n{goodbye}");
             return client.Udp.SendAsync(data, data.Length, Zeroconf.BroadcastEndpoint);
         }
 
@@ -149,7 +150,7 @@ namespace Convenient.Gooday
                         Type = RRType.PTR, 
                         Class = Class.IN,
                         Ttl = ttl,
-                        Record = new PointerRecord
+                        Record = new PTRRecord
                         {
                             //PTRDName = $"{Host}.{Domain}."
                             PTRDName = $"{ServiceType}.{Domain}."
@@ -161,7 +162,7 @@ namespace Convenient.Gooday
                         Type = RRType.TXT, 
                         Class = Class.IN,
                         Ttl = ttl,
-                        Record = new TextRecord
+                        Record = new TXTRecord
                         {
                             Text = new List<string>
                             {
@@ -175,7 +176,7 @@ namespace Convenient.Gooday
                         Type = RRType.PTR, 
                         Class = Class.IN,
                         Ttl = ttl,
-                        Record = new PointerRecord
+                        Record = new PTRRecord
                         {
                             PTRDName = $"{InstanceName}.{ServiceType}.{Domain}."
                         }
@@ -186,7 +187,7 @@ namespace Convenient.Gooday
                         Type = RRType.SRV, 
                         Class = Class.IN,
                         Ttl = ttl,
-                        Record = new ServiceRecord
+                        Record = new SRVRecord
                         {
                             Priority = 0,
                             Weight = 0,

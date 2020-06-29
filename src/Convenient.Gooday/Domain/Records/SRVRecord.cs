@@ -1,6 +1,6 @@
 namespace Convenient.Gooday.Domain.Records
 {
-    public class ServiceRecord : IRecord
+    public class SRVRecord : IRecord
     {
         public ushort Priority { get; set; }
         public ushort Weight { get; set; }

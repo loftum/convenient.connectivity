@@ -1,6 +1,6 @@
 namespace Convenient.Gooday.Domain.Records
 {
-    public class PointerRecord : IRecord
+    public class PTRRecord : IRecord
     {
         public string PTRDName { get; set; }
 

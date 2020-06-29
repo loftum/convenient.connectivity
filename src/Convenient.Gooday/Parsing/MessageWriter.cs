@@ -74,14 +74,14 @@ namespace Convenient.Gooday.Parsing
             {
                 case null:
                     throw new ArgumentNullException(nameof(record));
-                case PointerRecord p:
+                case PTRRecord p:
                 {
                     var bytes = DomainName.ToBytes(p.PTRDName);
                     _bytes.AddRange(((ushort)bytes.Length).ToBytes());
                     _bytes.AddRange(DomainName.ToBytes(p.PTRDName));
                     break;
                 }
-                case ServiceRecord s:
+                case SRVRecord s:
                 {
                     var bytes = new List<byte>();
                     bytes.AddRange(s.Priority.ToBytes());
@@ -93,7 +93,7 @@ namespace Convenient.Gooday.Parsing
                     _bytes.AddRange(bytes);
                     break;
                 }
-                case TextRecord t:
+                case TXTRecord t:
                 {
                     var bytes = new List<byte>();
                     foreach (var text in t.Text)

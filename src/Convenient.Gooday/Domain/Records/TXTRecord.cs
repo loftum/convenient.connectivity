@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Convenient.Gooday.Domain.Records
 {
-    public class TextRecord : IRecord
+    public class TXTRecord : IRecord
     {
         public List<string> Text { get; set; } = new List<string>();
 
