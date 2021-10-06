@@ -11,5 +11,19 @@ namespace Convenient.Gooday.Domain.Extensions
 
             return $"{value.Substring(0, limit - 5)}(...)";
         }
+        
+        internal static string UnderscorePrefix(this string value)
+        {
+            return value == null || value.StartsWith("_") 
+                ? value
+                : $"_{value}";
+        }
+
+        internal static string WithoutPostfix(this string value)
+        {
+            return value == null || !value.Contains(".")
+                ? value
+                : value.Substring(0, value.IndexOf('.'));
+        }
     }
 }

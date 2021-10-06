@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Convenient.Gooday.Collections;
 using Convenient.Gooday.Domain;
+using Convenient.Gooday.Domain.Extensions;
 using Convenient.Gooday.Domain.Records;
 using Convenient.Gooday.Domain.Types;
 using Convenient.Gooday.Logging;
@@ -13,13 +14,16 @@ using Convenient.Gooday.Parsing;
 
 namespace Convenient.Gooday
 {
+    /// <summary>
+    /// Browses network for specified services
+    /// </summary>
     public class NetworkServiceBrowser: IDisposable
     {
         public event EventHandler<NetworkServiceEventArgs> FoundService;
         public event EventHandler<NetworkServiceEventArgs> RemovedService;
 
         private readonly ILogger _logger;
-        private readonly ExpiringDictionary<string, NetworkService> _services = new ExpiringDictionary<string, NetworkService>();
+        private readonly ExpiringDictionary<string, NetworkService> _services = new();
         
         
         public bool IsRunning { get; private set; }
@@ -30,7 +34,23 @@ namespace Convenient.Gooday
         private readonly string _serviceType;
         private readonly string _domain;
         
-        public NetworkServiceBrowser(string serviceType, string domain = "local", ILogger logger = null)
+        /// <summary>
+        /// Creates NetworkServiceBrowser
+        /// </summary>
+        /// <param name="serviceType">e.g _music-service._tcp</param>
+        /// <param name="domain">e.g local</param>
+        public NetworkServiceBrowser(string serviceType, string domain)
+            :this(serviceType, domain, new NullLogger())
+        {
+        }
+        
+        /// <summary>
+        /// Creates NetworkServiceBrowser
+        /// </summary>
+        /// <param name="serviceType">e.g _music-service._tcp</param>
+        /// <param name="domain">e.g local</param>
+        /// <param name="logger">Logger</param>
+        public NetworkServiceBrowser(string serviceType, string domain, ILogger logger)
         {
             _serviceType = serviceType.UnderscorePrefix();
             _domain = domain;
@@ -105,34 +125,70 @@ namespace Convenient.Gooday
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    _logger.Error(e);
                 }
             }
         }
 
         private void Handle(DomainMessage message)
         {
-            var srv = message.Answers.FirstOrDefault(a => a.Type == RRType.SRV &&
+            if (message.Answers.Any(a => a.Name.Contains(_serviceType)))
+            {
+                _logger.Debug($"Handle {message}");
+            }
+            else
+            {
+                _logger.Trace($"Handle {message}");    
+            }
+            
+
+            // Find pointer (PTR) ...
+            var ptr = message.Answers.FirstOrDefault(a => a.Type == RRType.PTR &&
                                                           a.Class == Class.IN &&
-                                                          a.Name.EndsWith($"{_serviceType}.{_domain}."));
-            if (srv == null)
+                                                          a.Name == $"{_serviceType}.{_domain}.");
+            if (ptr == null)
             {
                 return;
             }
-            
-            _logger.Debug($"Got\n{message}");
 
-            var record = (SRVRecord) srv.Record; 
+            var pointerRecord = (PTRRecord) ptr.Record;
+            
+            // ... that points to a service (SRV)
+            var srv = message.Answers.FirstOrDefault(a => a.Type == RRType.SRV &&
+                                                          a.Name == pointerRecord.PTRDName);
+            if (srv == null)
+            {
+                _services.SetTtl(pointerRecord.PTRDName, ptr.Ttl);
+                return;
+            }
+
+            var serviceRecord = (SRVRecord) srv.Record;
+            
             var service = new NetworkService
             {
                 Name = srv.Name.Split('.')[0],
                 Type = _serviceType,
                 Domain = _domain,
-                Port = record.Port,
-                HostName = record.Target
+                Port = serviceRecord.Port,
+                HostName = serviceRecord.Target,
             };
-            _logger.Info($"AddOrUpdate {service.Name}, ttl: {srv.Ttl}");
-            _services.AddOrUpdate(service.Name, service, (int) srv.Ttl);
+            
+            var txt = message.Answers.FirstOrDefault(a => a.Type == RRType.TXT);
+            var txtRecord = (TXTRecord) txt?.Record;
+            if (txtRecord?.Text != null)
+            {
+                service.TxtRecord.AddRange(txtRecord.Text);
+            }
+            
+            var a = message.Answers.FirstOrDefault(a => a.Type == RRType.A) ?? message.Additionals.FirstOrDefault(a => a.Type == RRType.A);
+            var aRecord = (ARecord) a?.Record;
+            if (aRecord?.Address != null)
+            {
+                service.Addresses.Add(aRecord.Address);
+            }
+            
+            _logger.Debug($"AddOrUpdate {pointerRecord.PTRDName}, ttl: {srv.Ttl}");
+            _services.AddOrUpdate(pointerRecord.PTRDName, service, ptr.Ttl);
         }
 
         private DomainMessage CreateRequest(ushort id)

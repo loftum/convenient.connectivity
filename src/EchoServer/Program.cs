@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Convenient.Gooday;
@@ -17,7 +18,10 @@ namespace EchoServer
                     using (var echoServer = new EchoServer())
                     {
                         echoServer.Start(source.Token);
-                        using (var publisher = new NetworkServicePublisher("EchoServer", "_echo._tcp", (ushort) echoServer.Port))
+                        using (var publisher = new NetworkServicePublisher("EchoServer", "_echo._tcp", "local", (ushort) echoServer.Port, new Dictionary<string, string>
+                        {
+                            ["_d"] = "EchoServer"
+                        }))
                         {
                             publisher.Start();
                             var running = true;

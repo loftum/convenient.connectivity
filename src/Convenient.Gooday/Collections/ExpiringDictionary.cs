@@ -56,7 +56,13 @@ namespace Convenient.Gooday.Collections
             }
         }
         
-        public void AddOrUpdate(TKey key, TValue value, int ttl)
+        public void SetTtl(TKey key, uint ttl)
+        {
+            var expiry = DateTimeOffset.UtcNow + TimeSpan.FromSeconds(ttl);
+            _expiry.AddOrUpdate(key, expiry, (k, d) => expiry);
+        }
+        
+        public void AddOrUpdate(TKey key, TValue value, uint ttl)
         {
             var added = false;
             _values.AddOrUpdate(key, k =>
